@@ -24,3 +24,6 @@ jobs:
 
       - name: Build and run tests
         run: mvn clean test
+
+      - name: Build Docker image with Jib
+        run: mvn jib:dockerBuild

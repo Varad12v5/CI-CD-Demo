@@ -25,5 +25,11 @@ jobs:
       - name: Build and run tests
         run: mvn clean test
 
-      - name: Build Docker image with Jib
-        run: mvn jib:dockerBuild
+      - name: Build & Push Docker image with Jib
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: |
+          mvn jib:build \
+            -Djib.to.auth.username=$DOCKER_USERNAME \
+            -Djib.to.auth.password=$DOCKER_PASSWORD

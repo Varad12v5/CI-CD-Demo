@@ -10,43 +10,46 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout code
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2️⃣ Setup Java
       - name: Set up Java 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
 
-      # 3️⃣ Build Spring Boot app
       - name: Build application
         run: mvn clean package -DskipTests
 
-      # 4️⃣ Configure SSH
       - name: Configure SSH
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/ec2_key
           chmod 600 ~/.ssh/ec2_key
-          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
-      # 5️⃣ Ensure app directory exists on EC2
       - name: Create app directory on EC2
         run: |
-          ssh -i ~/.ssh/ec2_key ec2-user@${{ secrets.EC2_HOST }} "mkdir -p /home/ec2-user/app"
+          ssh -i ~/.ssh/ec2_key \
+              -o StrictHostKeyChecking=no \
+              -o UserKnownHostsFile=/dev/null \
+              ec2-user@${{ secrets.EC2_HOST }} \
+              "mkdir -p /home/ec2-user/app"
 
-      # 6️⃣ Copy JAR to EC2
       - name: Copy JAR to EC2
         run: |
-          scp -i ~/.ssh/ec2_key target/*.jar ec2-user@${{ secrets.EC2_HOST }}:/home/ec2-user/app/
+          scp -i ~/.ssh/ec2_key \
+              -o StrictHostKeyChecking=no \
+              -o UserKnownHostsFile=/dev/null \
+              target/*.jar \
+              ec2-user@${{ secrets.EC2_HOST }}:/home/ec2-user/app/
 
-      # 7️⃣ Restart Spring Boot app
       - name: Restart Spring Boot app
         run: |
-          ssh -i ~/.ssh/ec2_key ec2-user@${{ secrets.EC2_HOST }} << 'EOF'
+          ssh -tt -i ~/.ssh/ec2_key \
+              -o StrictHostKeyChecking=no \
+              -o UserKnownHostsFile=/dev/null \
+              ec2-user@${{ secrets.EC2_HOST }} << 'EOF'
             pkill -f .jar || true
             nohup java -jar /home/ec2-user/app/*.jar > app.log 2>&1 &
           EOF

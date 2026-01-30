@@ -30,3 +30,4 @@ jobs:
         run: |
           rsync -avz -e "ssh -i ~/.ssh/ec2_key -o StrictHostKeyChecking=no" target/*.jar ec2-user@${{ secrets.EC2_HOST }}:~/deploy/app.jar
           ssh -i ~/.ssh/ec2_key -o StrictHostKeyChecking=no ec2-user@${{ secrets.EC2_HOST }} "~/deploy/deploy.sh"
+
